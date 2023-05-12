@@ -8,6 +8,7 @@ The data are available on Zenodo :  10.5281/zenodo.7828148
 Lorène Jeantet & Emmanuel Dufourq
 
 African Institute for Mathematical Sciences, Cape Town, South Africa
+
 Machine Learning for Ecology research group
 
 #
