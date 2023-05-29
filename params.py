@@ -5,24 +5,24 @@ Created on Fri Dec  9 14:49:53 2022
 @author: ljeantet
 """
 '''
-Script related to the article 
+Script related to the article "Empowering Deep Learning Acoustic Classifiers with Human-like Ability 
+to Utilize Contextual Information for Wildlife Monitoring" by Jeantet and Dufourq.
+
 File containing the parameters used in the study to process the audio files into spectogram
 and the parameters of the architectures of the CNN used. 
 '''
 
 
 
+# I - Parameters of the preprocessing of the acoustic files
 
-#I-parameters of the preprocessing of the acoustic files
-
-#segmentation of the acoustic file
+# Segmentation of the acoustic file
 segment_duration=3
 hop_chunck=0.5
-nb_augmented_noise=0
-nb_augmented_pitch=0
 
 
-#parameters of the spectograms
+
+# Parameters of the spectrograms
 n_fft = 1024 # Hann window length
 hop_length=256 # Sepctrogram hop size
 n_mels=128
@@ -37,7 +37,7 @@ type_spec='mel-spectro' #betwenn 'spectro','mel-specto','pcen'
 downsample_rate = 22050
 
 
-#II-parameters of the models
+# II-Parameters of the models
 
 #parameters of the base line model CNN
 conv_layers = 1
@@ -49,10 +49,10 @@ conv_kernel = 16
 fc_units_1 = 32
 fc_units_2 = 32
 
-#embedding
+# Embedding layer for the Multi-branch CNN (Case III)
 vocab_size=50
 max_length=2
 
-#training
+# Training
 epoch=40
 batch_size=32

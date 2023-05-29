@@ -28,20 +28,17 @@ import json
 class Preprocessing_Xenocanto:
     
     def __init__(self, folder, folder_annotation, out_dir, database_file, lowpass_cutoff, 
-                 downsample_rate,  segment_duration, hop_chunck, nb_augmented_noise,  
-                 nb_augmented_pitch, type_spec, type_saved_data,                 
-                 n_fft, hop_length, n_mels, f_min, f_max, nyquist_rate, win_length ):
+                 downsample_rate,  segment_duration, hop_chunck,  
+                 type_spec, type_saved_data, n_fft, hop_length, n_mels, f_min, f_max, nyquist_rate, win_length ):
+        
         self.folder = folder
         self.folder_annotation=folder_annotation
         self.database_file=database_file
         self.out_dir=out_dir
-
         self.segment_duration = segment_duration
         self.lowpass_cutoff = lowpass_cutoff
         self.downsample_rate = downsample_rate
         self.hop_chunck=hop_chunck
-        self.nb_augmented_noise=nb_augmented_noise
-        self.nb_augmented_pitch=nb_augmented_pitch
         self.type_spec=type_spec
         self.type_saved_data=type_saved_data
         self.nyquist_rate = nyquist_rate
@@ -57,20 +54,54 @@ class Preprocessing_Xenocanto:
 
 
     def butter_lowpass(self, cutoff, nyq_freq, order=4):
+        
+        '''
+        Butterworth lowpass filter design.
+    
+        Parameters:
+            - cutoff: The cutoff frequency of the filter.
+            - nyq_freq: The Nyquist frequency of the signal.
+            - order: The order of the filter (default is 4).
+    
+        Returns:
+            - b: Numerator coefficients of the filter transfer function.
+            - a: Denominator coefficients of the filter transfer function.
+        '''  
+        
         normal_cutoff = float(cutoff) / nyq_freq
         b, a = signal.butter(order, normal_cutoff, btype='lowpass')
         return b, a
 
     def butter_lowpass_filter(self, data, cutoff_freq, nyq_freq, order=4):
         # Source: https://github.com/guillaume-chevalier/filtering-stft-and-laplace-transform
+        
+        '''
+        Apply Butterworth lowpass filter to the input data.
+  
+        Parameters:
+            - data: The input signal or data to be filtered.
+            - cutoff_freq: The cutoff frequency of the filter.
+            - nyq_freq: The Nyquist frequency of the signal.
+            - order: The order of the filter (default is 4).
+  
+        Returns:
+            - y: The filtered signal or data after applying the Butterworth lowpass filter.
+        '''
+        
         b, a = self.butter_lowpass(cutoff_freq, nyq_freq, order=order)
         y = signal.filtfilt(b, a, data)
         return y
 
     def read_audio_file(self, file_path):
         '''
-       file_name: string, name of file including extension, e.g. "audio1.wav"
-    
+        Read an audio file and return the amplitudes and sample rate.
+
+        Parameters:
+                - file_path: The path to the audio file.
+
+        Returns:
+                - audio_amps: The amplitudes of the audio file.
+                - audio_sample_rate: The sample rate of the audio file.
         '''
    
         # Read the amplitudes and sample rate
@@ -82,24 +113,34 @@ class Preprocessing_Xenocanto:
     def downsample_file(self, amplitudes, original_sr, new_sample_rate):
         '''
         Downsample an audio file to a given new sample rate.
-        amplitudes:
-        original_sr:
-        new_sample_rate:
-        
+
+        Parameters:
+            - amplitudes: The amplitudes of the audio file.
+            - original_sr: The original sample rate of the audio file.
+            - new_sample_rate: The desired new sample rate for downsampling.
+
+        Returns:
+            - downsampled_amplitudes: The downsampled amplitudes of the audio file.
+            - new_sample_rate: The sample rate after downsampling.
         '''
         return librosa.resample(amplitudes, 
-                                original_sr, 
-                                new_sample_rate, 
+                                orig_sr=original_sr, 
+                                target_sr=new_sample_rate, 
                                 res_type='kaiser_fast'), new_sample_rate
 
 
     def build_mel_spectro(self, audio):
         '''
         Convert amplitude values into a mel-spectrogram.
+    
+        Parameters:
+            - audio: The audio amplitudes.
+    
+        Returns:
+            - S1: The mel-spectrogram representation of the audio.
         '''
-        S = librosa.feature.melspectrogram(audio, n_fft=self.n_fft,hop_length=self.hop_length,win_length=self.win_length, 
-                                           n_mels=self.n_mels, fmin=self.f_min, fmax=self.f_max)
-        S = librosa.feature.melspectrogram(audio, n_fft=self.n_fft,hop_length=self.hop_length, 
+        
+        S = librosa.feature.melspectrogram(y=audio, n_fft=self.n_fft,hop_length=self.hop_length,win_length=self.win_length, 
                                            n_mels=self.n_mels, fmin=self.f_min, fmax=self.f_max)
         
         image = librosa.core.power_to_db(S)
@@ -113,19 +154,22 @@ class Preprocessing_Xenocanto:
         spec_min, spec_max = spec_norm.min(), spec_norm.max()
         spec_scaled = (spec_norm - spec_min) / (spec_max - spec_min)
         S1 = spec_scaled
-        
     
-        # 3 different input
         return S1
 
     def build_spectro(self, audio):
         '''
-        Convert amplitude values into a mel-spectrogram.
+        Convert amplitude values into a spectrogram.
+    
+        Parameters:
+            - audio: The audio amplitudes.
+    
+        Returns:
+            - S1: The spectrogram representation of the audio.
         '''
+        
         D=librosa.stft(audio, n_fft=self.n_fft, hop_length=self.hop_length, win_length=self.win_length)
         image=librosa.amplitude_to_db(abs(D))         
-        
- 
         image_np = np.asmatrix(image)
         image_np_scaled_temp = (image_np - np.min(image_np))
         image_np_scaled = image_np_scaled_temp / np.max(image_np_scaled_temp)
@@ -137,15 +181,19 @@ class Preprocessing_Xenocanto:
         spec_scaled = (spec_norm - spec_min) / (spec_max - spec_min)
         S1 = spec_scaled
         
-    
-        # 3 different input
         return S1
     
     def build_pcen(self, audio, sample_rate):
         '''
-        Convert amplitude values into a mel-spectrogram.
-        '''
-        
+        Convert amplitude values into a Per-Channel Energy Normalization (PCEN).
+    
+        Parameters:
+            - audio: The audio amplitudes.
+            - sample_rate: The sample rate of the audio.
+    
+        Returns:
+            - pcen: The PCEN representation of the audio.
+            '''     
         
         audio = (audio * (2 ** 31)).astype("float32")
         stft = librosa.stft(audio, n_fft=self.n_fft, win_length=self.win_length, hop_length=self.hop_length)
@@ -159,12 +207,20 @@ class Preprocessing_Xenocanto:
         pcen = pcen.astype("float32")
         
         
-    
-        # 3 different input
         return pcen
     
 
-    def convert_single_to_image(self,segment, sample_rate):
+    def convert_single_to_image(self,segment, sample_rate):    
+        '''
+        Convert a single audio segment into the chosen visual representation.
+        
+        Parameters:
+            - segment: The audio segment.
+            - sample_rate: The sample rate of the audio.
+    
+        Returns:
+            - image: The visual representation of the audio segment.
+        '''
     
         if self.type_spec=='spectro':
             image=self.build_spectro(segment)
@@ -181,7 +237,14 @@ class Preprocessing_Xenocanto:
     
     def convert_all_to_image(self ,audio_list, sample_rate):
         '''
-        Convert a number of segments into their corresponding spectrograms.
+        Convert a number of segments into their corresponding visual representations.
+    
+        Parameters:
+            - audio_list: A list of audio segments.
+            - sample_rate: The sample rate of the audio.
+    
+        Returns:
+            - spectrograms: An array of the visual representations (spectrograms) of the audio segments.
         '''
         spectrograms = []
         for segment in audio_list:
@@ -191,30 +254,35 @@ class Preprocessing_Xenocanto:
 
 
     def print_spectro(self, spectro, sample_rate, title="spectogram"):
+        '''
+        Plot the spectrogram.
+    
+        Parameters:
+            - spectro: The spectrogram to be plotted.
+            - sample_rate: The sample rate of the audio.
+            - title: The title of the plot (default is "spectrogram").
+        '''
+        
         fig, ax = plt.subplots(figsize=(12,5))
         img=librosa.display.specshow(spectro,sr=sample_rate,hop_length=self.hop_length, cmap='magma', x_axis='time',ax=ax)
         fig.colorbar(img, ax=ax,format='%+2.0f dB')
         fig.suptitle(title)
 
-
-
-    def get_meta_data(self, file, database_ref):
     
-        id_xeno=file.split('-')[0]
-        species=file.split('-')[1]
+    def create_and_save_dictionnary(self,labels, name_dict):
+        '''
+        Create and save dictionaries for label name to label index and label index to label name mappings.
+    
+        Parameters:
+            - labels: A list of label names.
+            - name_dict : indication to identify the dictionary
+    
+        Returns:
+            - labelName_to_labelInd: A dictionary mapping label names to label indices.
+            - labelInd_to_labelName: A dictionary mapping label indices to label names.
+        '''
         
-        if id_xeno in database_ref['ID'].values:
         
-            meta=database_ref[(database_ref['ID']==id_xeno) & (database_ref['Species']==species)][['lat','lng','date','time','cnt']].values
-        
-        else:
-            meta=np.full((1,5), np.nan)
-        
-        
-        return meta[0]
-
-
-    def create_and_save_dictionnary(self,labels):
     
         labelName_to_labelInd={}
         labelInd_to_labelName={}
@@ -224,10 +292,10 @@ class Preprocessing_Xenocanto:
             labelInd_to_labelName[i]=name
     
         #save dictionnary
-        with open(self.out_dir+"/labelName_to_labelInd.json", 'w') as f:
+        with open(self.out_dir+"/labelName_to_labelInd_"+name_dict+".json", 'w') as f:
             json.dump(json.dumps(labelName_to_labelInd), f)
     
-        with open(self.out_dir+"/labelInd_to_labelName.json", 'w') as f:
+        with open(self.out_dir+"/labelInd_to_labelName_"+name_dict+".json", 'w') as f:
             json.dump(json.dumps(labelInd_to_labelName), f)
     
         return labelName_to_labelInd,labelInd_to_labelName
@@ -249,75 +317,33 @@ class Preprocessing_Xenocanto:
             print(dico)
         
         return dico
-    
-
-    
-    def pitch_shifting(self, audio_list, sample_rate):
-
-        augmented=[]
-        for audio in audio_list:
-            for i in range(self.nb_augmented_pitch):
-                shift=randint(-5, 5)
-                while shift==0:
-                    shift=randint(-5, 5)
-                    wav_pitch_sf = librosa.effects.pitch_shift(audio,sample_rate,n_steps=shift)
-                    augmented.append(wav_pitch_sf)
-     
-        return augmented   
-
-
-
-    def blend(self, audio_1, audio_2, w_1, w_2):
-        augmented = w_1 * audio_1 + w_2 * audio_2
-        return augmented
-
-    def add_noise(self, audio_list, sample_rate):
-    
-        fichiers_noise=[f for f in listdir(self.file_path_noise)]
-    
-        augmented=[]
-    
-        for audio in audio_list :
-        
-            for i in range(self.nb_augmented_noise):
-            
-                #pick up randomly noise file 
-                filenoise=self.file_path_noise+fichiers_noise[randint(0, len(fichiers_noise)-1)]
-         
-                audio_amps, original_sample_rate = self.read_audio_file(filenoise)
-                while (audio_amps.shape[0]<int(self.segment_duration*original_sample_rate)):
-                    filenoise=self.file_path_noise+fichiers_noise[randint(0, len(fichiers_noise)-1)]
-                    audio_amps, original_sample_rate = self.read_audio_file(filenoise)
-            
-                amplitudes_n, sample_rate = self.downsample_file(audio_amps, original_sample_rate, sample_rate)
-
-                #pick up randomly time 
-                time=randint(0, (amplitudes_n.shape[0]-int(self.segment_duration*sample_rate)))
-                
-                
-                
-                audio_noise=amplitudes_n[time:time+(int(self.segment_duration*sample_rate))]
-                  
-        
-                augmented.append(self.blend(audio, audio_noise, 0.6, 0.4))
-            
-
-        return augmented
+       
     
     def get_annotation_information(self, annotation_file_name, original_sample_rate):
+        
+        '''
+        Extract information from an annotation file.
+    
+        Parameters:
+            - annotation_file_name: The name of the annotation file (without the file extension).
+            - original_sample_rate: The original sample rate of the audio.
+    
+        Returns:
+            - df_svl: A pandas DataFrame containing the extracted annotation information (Start, End, Label).
+        '''
 
 
-            # Process the .svl xml file
-            xmldoc = minidom.parse(self.folder_annotation+'/'+annotation_file_name+'.svl')
-            itemlist = xmldoc.getElementsByTagName('point')
-            idlist = xmldoc.getElementsByTagName('model')
+        # Process the .svl xml file
+        xmldoc = minidom.parse(self.folder_annotation+'/'+annotation_file_name+'.svl')
+        itemlist = xmldoc.getElementsByTagName('point')
+        idlist = xmldoc.getElementsByTagName('model')
 
-            start_time = []
-            end_time = []
-            labels = []
-            audio_file_name = ''
+        start_time = []
+        end_time = []
+        labels = []
+        audio_file_name = ''
 
-            if (len(itemlist) > 0):
+        if (len(itemlist) > 0):
 
                 
                 print (annotation_file_name)
@@ -368,26 +394,64 @@ class Preprocessing_Xenocanto:
                         end_time.append(start_seconds+annotation_duration_seconds)
                         labels.append(label)
 
-            df_svl = pd.DataFrame({'Start': start_time, 'End':end_time ,'Label': labels})
-            return df_svl 
+        df_svl = pd.DataFrame({'Start': start_time, 'End':end_time ,'Label': labels})
+        return df_svl 
 
     def get_meta_label(self, file_name_no_extension, database_ref, dictionary):
-            xeno_id=file_name_no_extension.split('_')[5][2:]
+        '''
+         Retrieve metadata and corresponding label for a given file.
+         Requires a CSV file downloaded from Xenocanto
+    
+        Parameters:
+            - file_name_no_extension: The name of the file without the file extension.
+            - database_ref: The reference database containing metadata information obtained from Xenocanto.
+            - dictionary: The dictionary mapping labels to numerical values.
+    
+        Returns:
+            - meta: A numpy array containing the metadata (lat, lng, date, time, cnt).
+            - y: The label corresponding to the file.
+        ''' 
+        
+        
+        
+        #get back the ID number of the file
+        xeno_id=file_name_no_extension.split('_')[5][2:]
             
             
-            assert np.isin(xeno_id, database_ref['id']), "the id of the file {} is not contained in the reference database".format(file_name_no_extension)
+        assert np.isin(xeno_id, database_ref['id']), "the id of the file {} is not contained in the reference database".format(file_name_no_extension)
                 
-            try: 
+        try: 
                 meta=database_ref[database_ref['id']==int(xeno_id)][['lat','lng','date','time','cnt']].values[0]
 
                 y=dictionary[database_ref[database_ref['id']==int(xeno_id)]['Scientifique_name'].values[0]]
-            except : 
+        except : 
                 raise TypeError("the metadata are not provided in the file") 
                 
-            return meta, y
+        return meta, y
 
     def getXY (self, audio_amplitudes, start_sec, annotation_duration_seconds, 
                    label, file_name_no_extension, database_ref, labelName_to_labelInd, verbose):
+            '''
+            Extract segments, corresponding metadata, and labels from an audio file based on annotations (svl file).
+
+            Parameters:
+                - audio_amplitudes: Amplitude values of the audio file.
+                - start_sec: Starting time of the annotation in seconds.
+                - annotation_duration_seconds: Duration of the annotation in seconds.
+                - label: Label of the annotation.
+                - file_name_no_extension: Name of the file without the file extension.
+                - database_ref: Reference database containing metadata information from Xenocanto.
+                - labelName_to_labelInd: Dictionary mapping label names to numerical values.
+                - verbose: Boolean value indicating whether to print verbose output.
+
+            Returns:
+                - X_segments: List of audio segments.
+                - X_meta_segments: List of corresponding metadata for each segment.
+                -Y_labels: List of labels for each segment.
+            '''
+        
+        
+        
         
             X_segments = []
             X_meta_segments = []        
@@ -423,14 +487,14 @@ class Preprocessing_Xenocanto:
                 if end_data_observation > len(audio_amplitudes):
                     continue
                 
-                # Extract the segment of audio
+                # Extract the audio segment
                 X_audio = audio_amplitudes[start_data_observation:end_data_observation]
 
-                # Determine the actual time for the event
+                # Determine the actual time for the event in seconds
                 start_time_seconds = start_sec + i
                                 
                 
-                # Extract some meta data (here, the hour at which the vocalisation event occured)
+                # Extract the metadata and label
                 meta_location, label=self.get_meta_label(file_name_no_extension, database_ref, labelName_to_labelInd)
                 
                 X_segments.append(X_audio)
@@ -442,31 +506,68 @@ class Preprocessing_Xenocanto:
             
             
     def create_dataset(self, verbose):   
+            '''
+            Create the dataset from bird song audio files and corresponding annotations.
+ 
+            Parameters:
+                - verbose: Boolean value indicating whether to print verbose output.
+ 
+            Returns:
+                - X_calls: Array of audio segments.
+                - X_meta: Array of corresponding metadata for each segment.
+                - Y_calls: Array of labels for each segment.
+            ''' 
+            
+            if verbose == True:
+                print ('Annotations folder:',self.folder_annotation)
+                print ('Audio path',self.folder)
             
             
-            'for each folder and each file of bird song'
         
-            #create folder containig the results
+            #create folder to store results
             if not os.path.exists(self.out_dir):
                     os.makedirs(self.out_dir)
+                    dico=False #dictionary need to be created
             else:
                     print("outdir already created")
-
-            labelName_to_labelInd=self.load_dico(self.out_dir+'/labelName_to_labelInd_22.json',key_int=False,print_me=False)                
-            fichiers=[f for f in listdir(self.folder)] 
+                    dico=True  #dictionary has been already created previously
+                    
+            # Read database reference file
             database_ref=pd.read_csv(self.database_file,sep=';',encoding = "ISO-8859-1")  
-                
+            
+            ##lists all audio files to be processed in the folder
+            files=[f for f in listdir(self.folder)] 
+            
+            #load or create label dictionary       
+            if dico==True:
+                        labelName_to_labelInd=self.load_dico(self.out_dir+'/labelName_to_labelInd_22species.json',key_int=False,print_me=False)
+            else: 
+                        labels=np.unique([" ".join((x.split('_')[1],x.split('_')[2])) for x in files])
+                        labelName_to_labelInd, labelInd_to_labelName =self.create_and_save_dictionnary(labels,'22species')
+                        print('Dictionary has been created')
+                         
             X_calls = []
             X_meta = []
-            Y_calls = []    
+            Y_calls = []  
+            w=1 #counter
+            
 
-            for file in fichiers: 
-
+            for file in files: 
+                
+                print("files processed : ", w , 'on ', len(files))
+                
                 file_name_no_extension=file[:-4]
+                print ('file_name_no_extension', file_name_no_extension)
+                
+                # Read audio file
+                print ('Processing:',file_name_no_extension)
                 audio_amps, audio_sample_rate = self.read_audio_file(self.folder+'/'+file)
+                
+                # Apply filtering and downsampling to the audio
                 filtered = self.butter_lowpass_filter(audio_amps, self.lowpass_cutoff, self.nyquist_rate)
                 amplitudes, sample_rate = self.downsample_file(filtered, audio_sample_rate, self.downsample_rate)
-                        
+                 
+                # Get annotations for the file
                 annotation= self.get_annotation_information(file[:-4],audio_sample_rate)
                   
                 for index, row in annotation.iterrows():
@@ -476,7 +577,7 @@ class Preprocessing_Xenocanto:
                     label = row['Label']
                     annotation_duration_seconds = end_seconds - start_seconds
 
-                    # Extract augmented audio segments and corresponding binary labels
+                    # # Extract audio segments, metadata, and labels
                     X_data, X_meta_, Y = self.getXY(amplitudes, start_seconds, 
                                                             annotation_duration_seconds, label, 
                                                             file_name_no_extension, database_ref, labelName_to_labelInd,  verbose)
@@ -484,7 +585,8 @@ class Preprocessing_Xenocanto:
                     X_calls.extend(X_data)
                     X_meta.extend(X_meta_)
                     Y_calls.extend(Y)
-                            
+                w+=1
+            # convert to spectrogram if required
             if self.type_saved_data=='image':
                 X_calls = self.convert_all_to_image(X_calls, sample_rate)
 
@@ -495,8 +597,15 @@ class Preprocessing_Xenocanto:
                        
     def save_data_to_pickle(self, X, X_meta, Y, Saved_X='X_Picidae-pow', Saved_meta='X_meta_Picidae-pow',Saved_Y='Y_Picidae-pow'):
             '''
-            Save all of the spectrograms to a pickle file.
-        
+            Save the audio segments/spectrograms, metadata, and labels to pickle files.
+    
+            Parameters:
+                - X: Array of audio segments/spectrograms.
+                - X_meta: Array of corresponding metadata.
+                - Y: Array of labels.
+                - Saved_X: Name of the pickle file for audio segments/spectrograms.
+                - Saved_meta: Name of the pickle file for metadata.
+                - Saved_Y: Name of the pickle file for labels.
             '''
             outfile = open(os.path.join(self.out_dir, Saved_X+'.pkl'),'wb')
             pickle.dump(X, outfile, protocol=4)
@@ -513,8 +622,18 @@ class Preprocessing_Xenocanto:
                 
     def load_data_from_pickle(self, path, X, X_meta, Y,):
             '''
-            Load all of the spectrograms from a pickle file
-        
+            Load the audio segments, metadata, and labels from a pickle file.
+
+            Parameters:
+                - path: Path to the directory containing the pickle files.
+                - X: Name of the pickle file for audio segments.
+                - X_meta: Name of the pickle file for metadata.
+                - Y: Name of the pickle file for labels.
+
+            Returns:
+                - X: Loaded audio segments.
+                - X_meta: Loaded metadata.
+                - Y: Loaded labels.
             '''
             infile = open(os.path.join(path, X+'.pkl'),'rb')
             X = pickle.load(infile)
