@@ -27,7 +27,7 @@ database_file='~/Xenocanto_metadata_qualityA_selection.csv'
 
 ## Folder where processed data will be saved
 out_dir='~/Out'
-out_dir='C:/Users/ljeantet/Documents/Postdoc/Location/Xenocanto'
+
 
 
 
@@ -75,9 +75,9 @@ pre_pro.save_data_to_pickle(X_calls, X_meta, Y_calls, Saved_X='X_Xenocanto_audio
 # II- Preprocessing of the validation dataset
 
 ## Paths for the folders containing audio and annotation files for the validation dataset
-folder='E:/Projet_Metadata_2022/Xenocanto_22species/Audio_files/Validation_1'
-folder_annotation='E:/Projet_Metadata_2022/Xenocanto_22species/Annotation/Validation_1'
-out_dir='C:/Users/ljeantet/Documents/Postdoc/Location/Xenocanto/out_1'
+folder='~/Audio_files/Validation_1'
+folder_annotation='~/Annotation/Validation_1'
+out_dir='~/Out'
 
 
 ## Indicate if we want to keep the obtained segment in audio format or image (spectrogram)
