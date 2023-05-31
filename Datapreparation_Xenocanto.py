@@ -6,8 +6,13 @@ Created on Wed Jul 27 15:44:09 2022
 """
 
 '''
-Script related to the article ...
-Script to process the audio files downloaded from Xenocanto
+Script related to the article "Empowering Deep Learning Acoustic Classifiers with Human-like Ability 
+to Utilize Contextual Information for Wildlife Monitoring" by Jeantet and Dufourq.
+
+Script to process the audio files downloaded from Xenocanto.
+It will generate a training dataset saved in audio format and the spectrograms of the validation dataset.
+The training dataset is saved in audio format to be processed (data-augmentation and balance) in a second step with the script : Data_augmentation_and_balance.py  
+
 '''
 
 

@@ -5,6 +5,21 @@ Created on Wed Jul 27 15:34:41 2022
 @author: ljeantet
 """
 
+
+
+'''
+Script related to the article "Empowering Deep Learning Acoustic Classifiers with Human-like Ability 
+to Utilize Contextual Information for Wildlife Monitoring" by Jeantet and Dufourq.
+
+This class is designed to preprocess audio data from the Xenocanto database. 
+It includes various methods for filtering, downsampling, converting audio to different spectrogram representations (spectrograms, mel-spectrograms, and PCEN), 
+and extracting metadata from annotation files.
+
+
+'''
+
+
+
 import glob, os
 import numpy as np
 import random
@@ -193,7 +208,7 @@ class Preprocessing_Xenocanto:
     
         Returns:
             - pcen: The PCEN representation of the audio.
-            '''     
+        '''     
         
         audio = (audio * (2 ** 31)).astype("float32")
         stft = librosa.stft(audio, n_fft=self.n_fft, win_length=self.win_length, hop_length=self.hop_length)
@@ -303,6 +318,21 @@ class Preprocessing_Xenocanto:
   
 
     def load_dico(self, path, key_int=False,print_me=False):
+        """
+        Load a dictionary from a JSON file.
+    
+        Parameters:
+            -path (str): Path to the JSON file.
+            -key_int (bool): If True, convert dictionary keys to integers. Otherwise, keep them as strings. Default is False.
+            -print_me (bool): If True, print the loaded dictionary. Default is False.
+    
+        Returns:
+            dict: Loaded dictionary.
+        """
+        
+        
+        
+        
         with open(path) as f:
             dico_str = json.loads(json.load(f))
     
