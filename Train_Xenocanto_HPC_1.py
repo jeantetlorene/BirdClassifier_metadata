@@ -113,22 +113,8 @@ if model_name=='Custom_Meta_CNN_1':
     dataset=tf.data.Dataset.from_tensor_slices(({"audio_input": X_audio, "meta_input": Country_id}, {"class_output": Y}))
 
 
-
-#plt.imshow(train_iter_im.numpy()[:,:,0],  origin='lower') 
-
-"""
-if model_name=='Base_line':
-    dataset=trainer.Preprocessing_balanced_dataset_base_line(X_audio, X_meta, Y)
-if model_name=='Custom_Meta_CNN': 
-    dataset=trainer.Preprocessing_balanced_dataset_custom_CNN(X_audio, X_meta, Y)
-"""    
 print(dataset)
-"""
-train_iter_im, train_iter_label = next(iter(dataset))
-print (train_iter_im.numpy().shape, train_iter_label.numpy().shape)
-print(train_iter_label.numpy())
-print(train_iter_im.numpy())
-"""
+
 memo['X_audio_shape_0']=X_audio.shape[0]
 memo['X_audio_shape_1']=X_audio_shape_1=X_audio.shape[1]
 memo['X_audio_shape_2']=X_audio_shape_2=X_audio.shape[2]
@@ -138,7 +124,6 @@ del X_audio, X_meta, Y
 
 print('split the data')
 dataset_size=tf.data.experimental.cardinality(dataset).numpy()
-#dataset_size=trainer.num_instances
 print(dataset_size)
 train_ds, val_ds, _ =trainer.get_dataset_partitions_tf(dataset, dataset_size, train_split=0.8, val_split=0.2, test_split=0.0)
 
@@ -159,18 +144,17 @@ checkpoint = ModelCheckpoint(filepath, monitor='val_accuracy',verbose=1, save_be
 
 
 
-networks = CNNNetwork(X_audio_shape_1, X_audio_shape_2, conv_layers, conv_filters, dropout_rate, conv_kernel, max_pooling_size,
+networks = CNNetwork(X_audio_shape_1, X_audio_shape_2, conv_layers, conv_filters, dropout_rate, conv_kernel, max_pooling_size,
                      fc_units_1, fc_units_2, epochs, batch_size)
+
 if model_name=='Base_line':
     model=networks.CNN_network()
-    # model=networks.CNN_network_Lostanlen()
+
 if model_name=='Custom_Meta_CNN':
     model=networks.custom_CNN_network()
-    #model=networks.custom_CNN_network_Lostanlen()
+
 if model_name=='Custom_Meta_CNN_1':
     model=networks.custom_CNN_network_1(Country_id.shape[1])
-    #model=networks.custom_CNN_network_Lostanlen_1(Country_id.shape[1])
-    
     
 model.summary()    
     
@@ -185,27 +169,6 @@ history=model.fit(train_dataset,
           steps_per_epoch=(dataset_size*0.8)//batch_size, 
           validation_steps= (dataset_size*0.2)//batch_size,
           callbacks=[checkpoint])
-
-"""
-if model_name=='Base_line':
-    print(model_name)
-    history=model.fit(train_dataset,
-          validation_data=val_dataset,
-          epochs=epochs,
-          steps_per_epoch=(dataset_size*0.8)//BATCH_SIZE, 
-          validation_steps= (dataset_size*0.2)//BATCH_SIZE,
-          callbacks=[checkpoint])
-
-if model_name=='Custom_Meta_CNN': 
-    print(model_name)
-    history=model.fit(train_dataset,
-          validation_data=val_dataset,
-          epochs=epochs,
-          steps_per_epoch=(dataset_size*0.8)//BATCH_SIZE, 
-          validation_steps= (dataset_size*0.2)//BATCH_SIZE,
-          callbacks=[checkpoint])
-    
-"""
     
 end = time.time()
 

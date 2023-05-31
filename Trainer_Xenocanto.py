@@ -5,6 +5,20 @@ Created on Mon Jul  4 10:16:09 2022
 @author: ljeantet
 """
 
+'''
+Script related to the article "Empowering Deep Learning Acoustic Classifiers with Human-like Ability 
+to Utilize Contextual Information for Wildlife Monitoring" by Jeantet and Dufourq.
+
+This class is designed to facilitate training a model using a specified dataset. 
+It provides methods for loading data, preprocessing, creating a new folder for storing output, splitting the dataset, plotting loss and accuracy, and plotting a confusion matrix.
+
+
+'''
+
+
+
+
+
 import os
 import pickle
 import numpy as np
@@ -29,7 +43,7 @@ import itertools
 import matplotlib.pyplot as plt
 import librosa
 
-from CNNNetwork_Xenocanto import *
+from CNNetwork_Xenocanto import *
 
 
 class Training:
@@ -65,7 +79,14 @@ class Training:
         
     def load_data_from_pickle(self):
         '''
-        Load all of the spectrograms from a pickle file
+        
+        Load all of the spectrograms from a pickle file.
+
+        Returns:
+            X (object): The loaded spectrograms.
+            X_meta (object): The loaded metadata.
+            Y (object): The loaded labels.
+
                 
         '''
         infile = open(os.path.join(self.folder, self.X_file_name),'rb')
@@ -86,6 +107,19 @@ class Training:
             
     def load_dico(self, name, key_int=False, print_me=False):
         
+        """
+        Load a dictionary from a JSON file.
+    
+        Parameters:
+            -path (str): Path to the JSON file.
+            -key_int (bool): If True, convert dictionary keys to integers. Otherwise, keep them as strings. Default is False.
+            -print_me (bool): If True, print the loaded dictionary. Default is False.
+    
+        Returns:
+            dict: Loaded dictionary.
+        """
+        
+    
         with open(self.folder+name) as f:
             dico_str = json.loads(json.load(f))
             
@@ -102,24 +136,19 @@ class Training:
         return dico
     
   
-    
-    def save_X_to_pickle(self, X, Saved_X='X_Picidae-pow'):
-            '''
-            Save all of the spectrograms to a pickle file.
-        
-            '''
-            outfile = open(os.path.join(self.folder, Saved_X+'.pkl'),'wb')
-            pickle.dump(X, outfile, protocol=4)
-            outfile.close()
-        
-
-
-    
+   
     def add_extra_dim(self, X):
-        '''
+        """
         Add an extra dimension to the data so that it matches
         the input requirement of Tensorflow.
-        '''
+
+        Args:
+            X (ndarray): The input data to be reshaped.
+
+        Returns:
+            ndarray: The reshaped data with an additional dimension.
+        """
+        
         X_new = np.reshape(X,(X.shape[0],
                                    X.shape[1],
                                    X.shape[2],1))
@@ -127,7 +156,19 @@ class Training:
     
     def Embedding(self, X, X_meta, Y):
         
-        'remove empty data => problem to fix'
+        """
+        Replacing continent nouns with encoded numbers. This encoded numbers will be used as input 2 by the Embedding layer in the multi-branch. 
+
+        Args:
+            X (ndarray): The input data.
+            X_meta (ndarray): The metadata associated with the input data.
+            Y (ndarray): The target labels.
+
+        Returns:
+            ndarray: The updated input data.
+            ndarray: The embedded metadata.
+            ndarray: The updated target labels.
+        """
         
         
 
@@ -153,174 +194,54 @@ class Training:
     
     def create_new_folder(self, k):
         
+        """
+        Creates a new folder for storing the output.
+        Warning: this will clean up the directory if it already exists!
+
+        Args:
+            k (int): A parameter value used in the folder name.
+
+        Returns:
+            str: The path of the newly created folder.
+        """
+        
+        # Retrieve today's date to create a folder with this date as identifier 
         now = datetime.datetime.now()
         today=now.strftime("%Y_%m_%d")
         dir_out=self.folder_out+"model="+today+"_"+self.model_name+"_"+self.type_data+"_"+str(k)
         
-       
+        # Clear the directory if it already exists
         if os.path.exists(dir_out):
             shutil.rmtree(dir_out)
             print("we clear the directory:",dir_out)
         else:
             print("we create the directory:",dir_out)
     
-        """création des dossiers """
+        # Creation of the folder
         os.makedirs(dir_out)
         return dir_out
     
-    def Preprocessing_balanced_dataset_base_line(self, X, X_meta, Y):
-        
-        Y_id=Y.copy()
-        categories_ds = []
-        categories_weights = []
-        Y=to_categorical(Y)
-        
-        for species in np.unique(Y_id):
-            #get back species data 
-            index_sp=np.where(Y_id==species)[0]
-            X_meta_species=X_meta[index_sp]
-            X_species=X[index_sp]
-            Y_species=Y[index_sp]
-            
-            #for each country
-            countries=[x[4] for x in X_meta_species]
-            for country in np.unique(countries):
-                index=[x for x, z in enumerate(countries) if z == country]
-                cat_metadata=X_meta_species[index]
-                cat_x=X_species[index]
-                cat_y=Y_species[index]
-                num_instances_cat=X_meta_species[index].shape[0]
-                
-                cat_x=self.add_extra_dim(cat_x)
-                
-                
-                cat_ds=tf.data.Dataset.from_tensor_slices((cat_x, cat_y))
-                
-                cat_ds = cat_ds.shuffle(num_instances_cat).repeat()
-                cat_weight = float(min(num_instances_cat, self.max_instances_per_class))
-                categories_weights.append(cat_weight)      
-                categories_ds.append(cat_ds)
 
-
-        dataset = tf.data.experimental.sample_from_datasets(
-                                                        categories_ds,
-                                                        weights=categories_weights)
-        self.num_instances = int(sum(categories_weights))
-        
-        return dataset
     
-    
-    def Preprocessing_balanced_dataset_custom_CNN(self, X, X_meta, Y):
-        
-        
-        Y_id=Y.copy()
-        categories_ds = []
-        categories_weights = []
-        Y=to_categorical(Y)
-
-
-        for species in np.unique(Y_id):
-            #get back species data 
-            index=np.where(Y_id==species)[0]
-            X_meta_species=X_meta[index]
-            X_species=X[index]
-            Y_species=Y[index]
-            
-            #for each country
-            countries=[x[4] for x in X_meta_species]
-            for country in np.unique(countries):
-                index=[x for x, z in enumerate(countries) if z == country]
-                cat_meta=X_meta_species[index]
-                cat_x=X_species[index]
-                cat_y=Y_species[index]
-                num_instances_cat=X_meta_species[index].shape[0]
-                
-                cat_x, cat_meta_emb, cat_y = self.Embedding(cat_x, cat_meta, cat_y)
-                
-                cat_x=self.add_extra_dim(cat_x)
-                cat_meta_emb=np.reshape(cat_meta_emb,(cat_meta_emb.shape[0],
-                                           cat_meta_emb.shape[1],1))
-                
-                cat_ds=tf.data.Dataset.from_tensor_slices(({"audio_input": cat_x, "meta_input": cat_meta_emb}, {"class_output": cat_y}))
-
-                       
-                cat_ds = cat_ds.shuffle(num_instances_cat).repeat()
-                cat_weight = float(min(num_instances_cat, self.max_instances_per_class))
-                categories_weights.append(cat_weight)      
-                categories_ds.append(cat_ds)
-
-
-        dataset = tf.data.experimental.sample_from_datasets(
-                                                        categories_ds,
-                                                        weights=categories_weights)
-
-
-        
-        self.num_instances = int(sum(categories_weights))
-        
-        return dataset
-      
-        
-    def train(self):
-        
-        'load data'
-        X_audio, X_meta, Y = self.load_data_from_pickle()
-        
-    
-        'balance silence category'
-        Y=to_categorical(Y)
-        
-        print(X_audio.shape)
-        print(Y.shape)
-        print(X_meta.shape)
-            
-        'Embedding'
-        X_audio, X_meta, Y = self.Embedding(X_audio, X_meta, Y, 50, 2)
-        X_audio=self.add_extra_dim(X_audio)
-        'split the data'
-        X_train, X_val, X_meta_train, X_meta_val, Y_train, Y_val= train_test_split(X_audio, X_meta, Y, 
-                                                                shuffle = True, random_state = 42, train_size = 0.8)
-        
-        
-        "load the model"
-        seed=random.randint(1, 1000000)
-        # Call backs to save weights
-        dir_out=self.create_new_folder()  #attention :supprime donnees enregistrees si deja existant
-        filepath= dir_out+"/weights_{}.hdf5".format(seed)
-        checkpoint = ModelCheckpoint(filepath, monitor='val_accuracy',verbose=1, save_best_only=True, mode='max')
-        
-        networks = CNNNetwork(X_audio.shape[1], X_audio.shape[2], self.conv_layers, self.conv_filters,self.dropout_rate, self.conv_kernel, self.max_pooling_size,
-                              self.fc_units_1, self.fc_units_2, self.epochs, self.batch_size)
-        if self.model_name=='Base_line':
-            model=networks.CNN_network()
-        if self.model_name=='Custom_Meta_CNN':
-            model=networks.custom_CNN_network()
-            
-    
-        'training'
-        start = time.time()
-        
-        if self.model_name=='Base_line':
-            history = model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
-                              batch_size=32,
-                              epochs=50,
-                              verbose=2, 
-                              callbacks=[checkpoint])
-        
-        if self.model_name=='Custom_Meta_CNN': 
-            history = model.fit([X_train, X_meta_train], Y_train, validation_data=([X_val, X_meta_val], Y_val), 
-                          batch_size=32,
-                          epochs=50,
-                          verbose=2, 
-                          callbacks=[checkpoint])
-        end = time.time()
-        
-        print('time training :', end-start)
-        
-        return history
-     
     
     def get_dataset_partitions_tf(self, ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
+        
+        """
+        Splits a dataset into training, validation, and test partitions.
+
+        Args:
+            ds (tf.data.Dataset): The input dataset.
+            ds_size (int): The size of the dataset.
+            train_split (float, optional): The proportion of the dataset to allocate for training. Defaults to 0.8.
+            val_split (float, optional): The proportion of the dataset to allocate for validation. Defaults to 0.1.
+            test_split (float, optional): The proportion of the dataset to allocate for testing. Defaults to 0.1.
+            shuffle (bool, optional): Whether to shuffle the dataset before splitting. Defaults to True.
+            shuffle_size (int, optional): The buffer size for shuffling. Defaults to 10000.
+
+        Returns:
+            tuple: A tuple containing the training, validation, and test datasets.
+        """
+        
         assert (train_split + val_split + test_split ) == 1
     
         if shuffle:
@@ -340,6 +261,17 @@ class Training:
         
     
     def plot_loss(self, history, dir_out, saved=True):
+        
+        """
+        Plots the training and validation loss as well as the training and validation accuracy.
+
+        Args:
+            history (keras.callbacks.History): The history object obtained from model training.
+            dir_out (str): The directory path to save the plots.
+            saved (bool, optional): Whether to save the plots. Defaults to True.
+        """
+            
+        
         
         loss_values = history.history['loss']
         val_loss_values=history.history['val_loss']
@@ -375,6 +307,21 @@ class Training:
                           precision=2, saved=True
                          ):
 
+        """
+        Plots the confusion matrix.
+
+        Args:
+            dir_out (str): The directory path to save the plot.
+            cm (numpy.ndarray): The confusion matrix.
+            classes (list): The list of class labels.
+            normalize (bool, optional): Whether to normalize the confusion matrix. Defaults to False.
+            title (str, optional): The title of the plot. Defaults to 'Confusion matrix'.
+            cmap (str, optional): The color map to use. Defaults to 'jet'.
+            precision (int, optional): The precision of the values in the confusion matrix. Defaults to 2.
+            saved (bool, optional): Whether to save the plot. Defaults to True.
+        """
+        
+        
         if normalize:
             cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
             print("Normalized confusion matrix")
@@ -388,19 +335,16 @@ class Training:
         ax.grid(False)
         im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
         ax.figure.colorbar(im, ax=ax)
-        # We want to show all ticks...
         ax.set(xticks=np.arange(cm.shape[1]),
            yticks=np.arange(cm.shape[0]),
-           # ... and label them with the respective list entries
            xticklabels=classes, yticklabels=classes,
            ylabel='True label',
            xlabel='Predicted label')
 
-        # Rotate the tick labels and set their alignment.
-        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor")
+        
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",rotation_mode="anchor")
 
-        # Loop over data dimensions and create text annotations.
+        
         fmt = '.'+str(precision)+'f' if normalize else 'd'
         thresh = cm.max() / 2.
         for i in range(cm.shape[0]):
