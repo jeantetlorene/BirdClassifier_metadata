@@ -192,7 +192,7 @@ class Training:
         return X, X_meta, Y
         
     
-    def create_new_folder(self, k):
+    def create_new_folder(self):
         
         """
         Creates a new folder for storing the output.
@@ -208,7 +208,7 @@ class Training:
         # Retrieve today's date to create a folder with this date as identifier 
         now = datetime.datetime.now()
         today=now.strftime("%Y_%m_%d")
-        dir_out=self.folder_out+"model="+today+"_"+self.model_name+"_"+self.type_data+"_"+str(k)
+        dir_out=self.folder_out+"model="+today+"_"+self.model_name+"_"+self.type_data
         
         # Clear the directory if it already exists
         if os.path.exists(dir_out):
