@@ -16,40 +16,32 @@ It provides methods for loading data, preprocessing, creating a new folder for s
 '''
 
 
-
-
-
 import os
 import pickle
 import numpy as np
 import pandas as pd
 import json
 import shutil
-
+import matplotlib.pyplot as plt
 
 import keras
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
+
 
 import time
 import datetime
-import random
-from random import randint
-import itertools
-import matplotlib.pyplot as plt
-import librosa
 
-from CNNetwork_Xenocanto import *
+
+
+
+
 
 
 class Training:
     def __init__(self, folder, folder_out, X_file_name, X_meta_file_name, Y_file_name, 
-                 vocab_size, max_length, type_data,
-                 model_name, conv_layers, conv_filters, dropout_rate,conv_kernel,max_pooling_size,fc_units_1,fc_units_2,epochs,batch_size):
+                 vocab_size, max_length, type_data, model_name):
         
         
         self.folder = folder
@@ -60,16 +52,8 @@ class Training:
         
         self.type_data=type_data   
         self.model_name=model_name
-        self.conv_layers=conv_layers
-        self.conv_filters=conv_filters
-        self.dropout_rate=dropout_rate
-        self.conv_kernel=conv_kernel
-        self.max_pooling_size =max_pooling_size
-        self.fc_units_1=fc_units_1
-        self.fc_units_2=fc_units_2
-        self.epochs=epochs
-        self.batch_size=batch_size
         
+
         
         self.num_instances=0
         
