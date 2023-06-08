@@ -30,12 +30,12 @@ The script XX.py is used to combine the two models and get the final results.
 
 '''
 
-# Set up the  working directory where the data and scripts are contained (can be dowloaded from Github)
+# Set up the  working directory where the data and scripts are contained 
 import os
-os.chdir('C:/Users/ljeantet/Documents/Postdoc/Location/Github/BirdClassifier_metadata')
+os.chdir('../BirdClassifier_metadata')
 
 
-from Trainer_Xenocanto import *
+from Training_class_Xenocanto import *
 from CNNetwork_Xenocanto import *
 import params
 
@@ -63,9 +63,9 @@ folder_out='Models_out/'
 memo=pd.Series()
 
 # Names of the files
-X_file_name='X_Xenocanto_melspect_balanced_training_article-pow.pkl'
-X_meta_file_name='X_meta_Xenocanto_melspect_balanced_training_article-pow.pkl'
-Y_file_name='Y_Xenocanto_melspect_balanced_training_article-pow.pkl'
+X_file_name='X_Xenocanto_melspect_balanced_training-pow.pkl'
+X_meta_file_name='X_meta_Xenocanto_melspect_balanced_training-pow.pkl'
+Y_file_name='Y_Xenocanto_melspect_balanced_training-pow.pkl'
 
 
 memo['X_train_name']=X_file_name
@@ -133,7 +133,7 @@ print('data loaded')
 # Dictionnary that maps one unique number to each country
 labelName_to_labelInd_country=trainer.load_dico('labelName_to_labelInd_country.json',key_int=False,print_me=False)
 # Dictionary that associates the identification number with each species
-labelInd_to_labelName=trainer.load_dico('labelInd_to_labelName_22.json',key_int=False,print_me=False)
+labelInd_to_labelName=trainer.load_dico('labelInd_to_labelName_22species.json',key_int=False,print_me=False)
 
 Y=to_categorical(Y)
 
@@ -253,9 +253,9 @@ print('time training :', end-start_time)
 ## IV- Validation Dataset
 
 # A- load validation data
-memo['X_val_name']=X_file_name='X_Xenocanto_melspect_val_article-pow.pkl'
-memo['X_meta_val_name']=X_meta_file_name='X_meta_Xenocanto_melspect_val_article-pow.pkl'
-memo['Y_val_name']=Y_file_name='Y_Xenocanto_melspect_val_article-pow.pkl'
+memo['X_val_name']=X_file_name='X_Xenocanto_melspect_val-pow.pkl'
+memo['X_meta_val_name']=X_meta_file_name='X_meta_Xenocanto_melspect_val-pow.pkl'
+memo['Y_val_name']=Y_file_name='Y_Xenocanto_melspect_val-pow.pkl'
 
 
 print(X_file_name)

@@ -19,7 +19,7 @@ The training and validation dataset have to be previously downloaded from Zenodo
 
 # Set up the  working directory where the data and scripts are contained (can be dowloaded from Github)
 import os
-os.chdir('C:/Users/ljeantet/Documents/Postdoc/Location/Github/BirdClassifier_metadata')
+os.chdir('../BirdClassifier_metadata')
 
 
 from Preprocessing_Xenocanto import *
@@ -28,12 +28,12 @@ import params
 
 # I - Preprocessing of the training dataset
 
-## Paths for the folders containing audio and annotation files
-folder='~/Audio_files/Training_1'
-folder_annotation='~/Annotation/Training_1'
+## Paths to the folders containing audio and annotation files for the tranain dataset
+folder='~/Audio_files/Training'
+folder_annotation='~/Annotation/Training'
 
 
-##File containing metadata of selected species' recordings from Xenocanto
+## File containing metadata of selected species' recordings from Xenocanto
 database_file='Xenocanto_metadata_qualityA_selection.csv'
 
 
@@ -80,13 +80,13 @@ pre_pro = Preprocessing_Xenocanto(folder, folder_annotation, out_dir, database_f
 X_calls, X_meta, Y_calls = pre_pro.create_dataset(verbose)
 
 ## Save the results
-pre_pro.save_data_to_pickle(X_calls, X_meta, Y_calls, Saved_X='X_Xenocanto_audio_training_article-pow', Saved_meta='X_meta_Xenocanto_audio_training_article-pow',Saved_Y='Y_Xenocanto_audio_training_article-pow')
+pre_pro.save_data_to_pickle(X_calls, X_meta, Y_calls, Saved_X='X_Xenocanto_audio_training-pow', Saved_meta='X_meta_Xenocanto_audio_training-pow',Saved_Y='Y_Xenocanto_audio_training-pow')
 
 
 
 # II- Preprocessing of the validation dataset
 
-## Paths for the folders containing audio and annotation files for the validation dataset
+## Paths to the folders containing audio and annotation files for the validation dataset
 folder='~/Audio_files/Validation'
 folder_annotation='~/Annotation/Validation'
 out_dir='out'
@@ -106,6 +106,6 @@ pre_pro = Preprocessing_Xenocanto(folder,folder_annotation, out_dir, database_fi
 X_calls_val, X_meta_val, Y_calls_val = pre_pro.create_dataset(verbose)
 
 ## Save the results
-pre_pro.save_data_to_pickle(X_calls_val, X_meta_val, Y_calls_val, Saved_X='X_Xenocanto_melspect_val_article-pow', Saved_meta='X_meta_Xenocanto_melspect_val_article-pow',Saved_Y='Y_Xenocanto_melspect_val_article-pow')
+pre_pro.save_data_to_pickle(X_calls_val, X_meta_val, Y_calls_val, Saved_X='X_Xenocanto_melspect_val-pow', Saved_meta='X_meta_Xenocanto_melspect_val-pow',Saved_Y='Y_Xenocanto_melspect_val-pow')
 
 

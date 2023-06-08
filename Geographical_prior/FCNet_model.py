@@ -3,6 +3,15 @@
 Created on Mon Jul 11 14:06:45 2022
 
 @author: ljeantet
+
+'''
+Script related to the article "Empowering Deep Learning Acoustic Classifiers with Human-like Ability 
+to Utilize Contextual Information for Wildlife Monitoring" by Jeantet and Dufourq.
+
+code adapted from @author:  Copyright 2021 Fagner Cunha
+
+from github https://github.com/alcunha/geo_prior_tf/blob/master/geo_prior/dataloader.py
+
 """
 
 import tensorflow as tf
@@ -27,7 +36,7 @@ def create_new_folder(model_out, model_name):
     else:
         print("we create the directory:",dir_out)
 
-    """création des dossiers """
+    
     os.makedirs(dir_out)
     return dir_out
 

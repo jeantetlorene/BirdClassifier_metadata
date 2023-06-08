@@ -23,6 +23,10 @@ Each window of the training dataset wil be converted in spectrogram and the trai
 
 '''
 
+# Set up the  working directory where the data and scripts are contained
+import os
+os.chdir('../BirdClassifier_metadata')
+
 
 from Augmentation_Xenocanto import *
 
@@ -35,10 +39,10 @@ out_dir='out/'
 
 
 
-## Names of the files 
-X_file_name='X_Xenocanto_audio_training_article-pow.pkl'
-X_meta_file_name='X_meta_Xenocanto_audio_training_article-pow.pkl'
-Y_file_name='Y_Xenocanto_audio_training_article-pow.pkl'
+## Names of the files
+X_file_name='X_Xenocanto_audio_training-pow.pkl
+X_meta_file_name='X_meta_Xenocanto_audio_training-pow.pkl'
+Y_file_name='Y_Xenocanto_audio_training-pow.pkl'
 
 
 sample_rate = 22050  #sample rate after pre-processing. Audio files have already been downsampled in the previous step

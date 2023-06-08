@@ -3,6 +3,16 @@
 Created on Fri Jul  8 08:25:52 2022
 
 @author: ljeantet
+
+
+Script related to the article "Empowering Deep Learning Acoustic Classifiers with Human-like Ability 
+to Utilize Contextual Information for Wildlife Monitoring" by Jeantet and Dufourq.
+
+code adapted from @author:  Copyright 2021 Fagner Cunha
+
+from github https://github.com/alcunha/geo_prior_tf/blob/master/geo_prior/dataloader.py
+
+
 """
 
 import pandas as pd
@@ -18,7 +28,7 @@ from keras.utils.np_utils import to_categorical
 
 class Prior_geo_MetaData_Generator:
     
-    def __init__(self, folder, database, out_dir, loc_encode, batch_size=8,          
+    def __init__(self, folder, database, loc_encode, dico=False, batch_size=8,          
                   max_instances_per_class=-1, is_training=False,
                   num_classes=None, batch_drop_remainder=True ):
         
@@ -26,7 +36,7 @@ class Prior_geo_MetaData_Generator:
         self.folder = folder
         self.database=database
         self.database_file=self.folder+self.database
-        self.folder_out=out_dir
+        self.dico=dico
         
         self.is_training = is_training
         self.batch_size=batch_size
@@ -36,7 +46,7 @@ class Prior_geo_MetaData_Generator:
         self.num_instances = 0
         self.num_classes = num_classes
             
-    def create_and_save_dictionnary(self,labels):
+    def create_and_save_dictionnary(self, labels):
     
         labelName_to_labelInd={}
         labelInd_to_labelName={}
@@ -46,10 +56,10 @@ class Prior_geo_MetaData_Generator:
             labelInd_to_labelName[i]=name
     
         #save dictionnary
-        with open(self.folder+"/labelName_to_labelInd.json", 'w') as f:
+        with open(self.folder+"/labelName_to_labelInd_8994species.json", 'w') as f:
             json.dump(json.dumps(labelName_to_labelInd), f)
     
-        with open(self.folder+"/labelInd_to_labelName.json", 'w') as f:
+        with open(self.folder+"/labelInd_to_labelName_8994species.json", 'w') as f:
             json.dump(json.dumps(labelInd_to_labelName), f)
     
         return labelName_to_labelInd,labelInd_to_labelName
@@ -101,40 +111,34 @@ class Prior_geo_MetaData_Generator:
 
     def make_meta_dataset(self):
     
-        'for each folder and each file of bird song'
-        print(self.folder_out)
-        #create folder containig the results
-        if not os.path.exists(self.folder_out):
-            os.makedirs(self.folder_out)
-            dico=False
-        else:
-            print("outdir already created")
-            dico=True
-
+        
         #prepare database ref and load dict    
         meta=pd.read_csv(self.database_file)
         
         columns_to_keep=['id','Scientifique_name','cnt','lat','lng']
         meta=meta.loc[:,columns_to_keep]
-        meta= meta.dropna(subset=['lng', 'lat'])
+        
         
         if self.num_classes is None:
           self.num_classes = np.unique(meta.Scientifique_name).shape[0]
         self.num_instances = meta.shape[0]
         
         
-        
-        if dico==True:
-            labelName_to_labelInd=self.load_dico(self.folder+'/labelName_to_labelInd.json',key_int=False,print_me=False)
+        # Create the dictionary or load it if already created
+        if self.dico==True:
+            labelName_to_labelInd=self.load_dico(self.folder+"/labelName_to_labelInd_8994species.json",key_int=False,print_me=False)
         else: 
             labels=np.unique(meta.Scientifique_name)
             labelName_to_labelInd, labelInd_to_labelName =self.create_and_save_dictionnary(labels)
-
         
+        #remove lines without the lat et long information
+        meta= meta.dropna(subset=['lng', 'lat'])
+        
+        # Associate the number id to each species 
         category_id=[labelName_to_labelInd[x] for x in meta.Scientifique_name]
         meta['category_id']=category_id
           
-        
+        # Put the data into tensor 
         if self.max_instances_per_class == -1:
           dataset = tf.data.Dataset.from_tensor_slices((
             meta.id,
@@ -147,6 +151,7 @@ class Prior_geo_MetaData_Generator:
         else:
           dataset = self._get_balanced_dataset(meta)
 
+        # Functions used to process the latitude and longitudes values
         def _encode_feat(feat, encode):
             if encode == 'encode_cos_sin':
                 return tf.sin(math.pi*feat), tf.cos(math.pi*feat)
@@ -177,6 +182,8 @@ class Prior_geo_MetaData_Generator:
         #dataset = dataset.prefetch()
 
         return (dataset, self.num_instances, self.num_classes)
+
+
 
 class RandSpatioTemporalGenerator:
   def __init__(self,
