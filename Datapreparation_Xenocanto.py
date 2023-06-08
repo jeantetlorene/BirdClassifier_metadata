@@ -13,7 +13,13 @@ Script to process the audio files downloaded from Xenocanto.
 It will generate a training dataset saved in audio format and the spectrograms of the validation dataset.
 The training dataset is saved in audio format to be processed (data-augmentation and balance) in a second step with the script : Data_augmentation_and_balance.py  
 
+The training and validation dataset have to be previously downloaded from Zenodo: https://doi.org/10.5281/zenodo.7828148 
+
 '''
+
+# Set up the  working directory where the data and scripts are contained (can be dowloaded from Github)
+import os
+os.chdir('C:/Users/ljeantet/Documents/Postdoc/Location/Github/BirdClassifier_metadata')
 
 
 from Preprocessing_Xenocanto import *
@@ -26,12 +32,13 @@ import params
 folder='~/Audio_files/Training_1'
 folder_annotation='~/Annotation/Training_1'
 
+
 ##File containing metadata of selected species' recordings from Xenocanto
-database_file='~/Xenocanto_metadata_qualityA_selection.csv'
+database_file='Xenocanto_metadata_qualityA_selection.csv'
 
 
 ## Folder where processed data will be saved
-out_dir='~/Out'
+out_dir='out'
 
 
 
@@ -73,16 +80,16 @@ pre_pro = Preprocessing_Xenocanto(folder, folder_annotation, out_dir, database_f
 X_calls, X_meta, Y_calls = pre_pro.create_dataset(verbose)
 
 ## Save the results
-pre_pro.save_data_to_pickle(X_calls, X_meta, Y_calls, Saved_X='X_Xenocanto_audio_training-pow', Saved_meta='X_meta_Xenocanto_audio_training-pow',Saved_Y='Y_Xenocanto_audio_training-pow')
+pre_pro.save_data_to_pickle(X_calls, X_meta, Y_calls, Saved_X='X_Xenocanto_audio_training_article-pow', Saved_meta='X_meta_Xenocanto_audio_training_article-pow',Saved_Y='Y_Xenocanto_audio_training_article-pow')
 
 
 
 # II- Preprocessing of the validation dataset
 
 ## Paths for the folders containing audio and annotation files for the validation dataset
-folder='~/Audio_files/Validation_1'
-folder_annotation='~/Annotation/Validation_1'
-out_dir='~/Out'
+folder='~/Audio_files/Validation'
+folder_annotation='~/Annotation/Validation'
+out_dir='out'
 
 
 ## Indicate if we want to keep the obtained segment in audio format or image (spectrogram)
@@ -99,6 +106,6 @@ pre_pro = Preprocessing_Xenocanto(folder,folder_annotation, out_dir, database_fi
 X_calls_val, X_meta_val, Y_calls_val = pre_pro.create_dataset(verbose)
 
 ## Save the results
-pre_pro.save_data_to_pickle(X_calls_val, X_meta_val, Y_calls_val, Saved_X='X_Xenocanto_melspect_val-pow', Saved_meta='X_meta_Xenocanto_melspect_val-pow',Saved_Y='Y_Xenocanto_melspect_val-pow')
+pre_pro.save_data_to_pickle(X_calls_val, X_meta_val, Y_calls_val, Saved_X='X_Xenocanto_melspect_val_article-pow', Saved_meta='X_meta_Xenocanto_melspect_val_article-pow',Saved_Y='Y_Xenocanto_melspect_val_article-pow')
 
 

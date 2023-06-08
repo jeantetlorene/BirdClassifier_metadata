@@ -30,6 +30,9 @@ The script XX.py is used to combine the two models and get the final results.
 
 '''
 
+# Set up the  working directory where the data and scripts are contained (can be dowloaded from Github)
+import os
+os.chdir('C:/Users/ljeantet/Documents/Postdoc/Location/Github/BirdClassifier_metadata')
 
 
 from Trainer_Xenocanto import *
@@ -49,24 +52,20 @@ import random
 
 
 # Path of the folder containing the training and validation dataset
-training_folder='C:/Users/ljeantet/Documents/Postdoc/Location/Xenocanto/out/'
-
-# Path of the folder to save the results
-folder_out='C:/Users/ljeantet/Documents/Postdoc/Location/Xenocanto/Models_out/'
-
 training_folder='out/'
 
 # Path of the folder to save the results
 folder_out='Models_out/'
 
 
+
 # Memo to save all the parameters used 
 memo=pd.Series()
 
 # Names of the files
-X_file_name='X_Xenocanto_melspect_balanced_training_1-pow.pkl'
-X_meta_file_name='X_meta_Xenocanto_melspect_balanced_training_1-pow.pkl'
-Y_file_name='Y_Xenocanto_melspect_balanced_training_1-pow.pkl'
+X_file_name='X_Xenocanto_melspect_balanced_training_article-pow.pkl'
+X_meta_file_name='X_meta_Xenocanto_melspect_balanced_training_article-pow.pkl'
+Y_file_name='Y_Xenocanto_melspect_balanced_training_article-pow.pkl'
 
 
 memo['X_train_name']=X_file_name
@@ -103,7 +102,7 @@ memo['batch_size']=batch_size = params.batch_size
     ## 'Custom_Meta_CNN_2' : Two-branch CNN taking spectrogram as input 1 and metadata as input 2 : country name is mapping into an embedding space of size 8 (Case III)
  
 
-memo['model_name']=model_name="Custom_Meta_CNN_1" 
+memo['model_name']=model_name="Custom_Meta_CNN_2" 
 print('Model to be loaded : ',model_name)
 
 # Type of visual reprensation of the acoustic files we are working with:
@@ -254,9 +253,9 @@ print('time training :', end-start_time)
 ## IV- Validation Dataset
 
 # A- load validation data
-memo['X_val_name']=X_file_name='X_Xenocanto_melspect_val_1-pow.pkl'
-memo['X_meta_val_name']=X_meta_file_name='X_meta_Xenocanto_melspect_val_1-pow.pkl'
-memo['Y_val_name']=Y_file_name='Y_Xenocanto_melspect_val_1-pow.pkl'
+memo['X_val_name']=X_file_name='X_Xenocanto_melspect_val_article-pow.pkl'
+memo['X_meta_val_name']=X_meta_file_name='X_meta_Xenocanto_melspect_val_article-pow.pkl'
+memo['Y_val_name']=Y_file_name='Y_Xenocanto_melspect_val_article-pow.pkl'
 
 
 print(X_file_name)
