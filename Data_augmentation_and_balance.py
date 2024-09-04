@@ -40,7 +40,7 @@ out_dir='out/'
 
 
 ## Names of the files
-X_file_name='X_Xenocanto_audio_training-pow.pkl
+X_file_name='X_Xenocanto_audio_training-pow.pkl'
 X_meta_file_name='X_meta_Xenocanto_audio_training-pow.pkl'
 Y_file_name='Y_Xenocanto_audio_training-pow.pkl'
 
